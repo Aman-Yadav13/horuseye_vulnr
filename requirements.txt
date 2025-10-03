@@ -1,0 +1,5 @@
+celery[redis]
+Flask
+pydantic
+python-dotenv
+semgrep
