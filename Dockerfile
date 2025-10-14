@@ -31,13 +31,12 @@ RUN set -eux; \
     ruby-dev \
     build-essential \
     wget \
-    yara \
-    ; \
+    yara; \
     git clone --depth 1 https://github.com/sullo/nikto.git /opt/nikto; \
     git clone --depth 1 https://github.com/Yara-Rules/rules.git /opt/yara-rules; \
     gem install wpscan; wpscan --update || true; \
     curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin; \
-    apt-get remove -y --purge git ruby-dev build-essential; \
+    apt-get remove -y --purge ruby-dev build-essential; \
     apt-get autoremove -y; \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

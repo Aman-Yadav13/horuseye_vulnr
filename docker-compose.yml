@@ -7,6 +7,10 @@ services:
       - "8081:8081"
     volumes:
       - ./outputs:/app/outputs
+      - ./gcloud-credentials.json:/app/gcloud-credentials.json:ro
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/gcloud-credentials.json
+      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
     env_file:
       - .env
     depends_on:
@@ -19,8 +23,12 @@ services:
     command: celery -A tasks worker --loglevel=info
     volumes:
       - ./outputs:/app/outputs
+      - ./gcloud-credentials.json:/app/gcloud-credentials.json:ro
     env_file:
       - .env
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/gcloud-credentials.json
+      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
     depends_on:
       redis:
         condition: service_healthy

@@ -5,6 +5,7 @@ from typing import List, Callable, Dict, Tuple, Optional
 from app.models import ToolOutput, ToolParameter
 import os
 import shutil
+from app.post_processing import default_post_processor, get_post_processor
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -84,6 +85,17 @@ class ToolRunner:
             
             # More reliable success check: The tool's exit code is the most reliable indicator.
             success = result.returncode == 0
+            
+            if success:
+                logger.info(f"Command for tool '{tool_name}' succeeded. Starting post-processing.")
+                post_processor = get_post_processor(tool_name)
+                # We pass all the context the post-processor needs
+                post_processor(scan_id, tool_name, output_dir, output_files)
+            else:
+                # Decide if you want to upload failed logs too. Defaulting to yes.
+                logger.warning(f"Command for tool '{tool_name}' failed. Uploading raw logs for review.")
+                default_post_processor(scan_id, tool_name, output_dir, output_files)
+
 
             return ToolOutput(
                 tool_name=tool_name,
@@ -99,6 +111,9 @@ class ToolRunner:
             logger.error(error_msg)
             with open(stderr_file, 'w', encoding='utf-8') as f:
                 f.write(error_msg)
+            
+            default_post_processor(scan_id, tool_name, output_dir, [stderr_file])
+
             return ToolOutput(
                 tool_name=tool_name, command=command, return_code=-1, stdout="",
                 stderr=error_msg, output_file_paths=[stderr_file], success=False
@@ -483,15 +498,24 @@ def build_yara_command(target: str, parameters: List[ToolParameter], scan_id: st
 def build_httpx_command(target: str, parameters: List[ToolParameter], scan_id: str, tool_name: str) -> List[str]:
     output_dir = f"/app/outputs/{scan_id}/{tool_name}"
     os.makedirs(output_dir, exist_ok=True)
-    json_report_file = os.path.join(output_dir, "httpx_results.json")
-    cmd = ["httpx", "-u", target, "-json", "-o", json_report_file]
+
+    base_cmd = ["httpx"]
+
     for param in parameters:
         flag = param.flag
-        if not flag: continue
+        if not flag:
+            continue
         if param.requiresValue and param.value is not None:
-            cmd.extend([flag, str(param.value)])
+            base_cmd.extend([flag, str(param.value)])
         elif not param.requiresValue and param.value:
-            cmd.append(flag)
-    logger.info(f"Built HTTPX command: {' '.join(cmd)}")
-    return cmd
+            base_cmd.append(flag)
+            
+    normalized_target = target if target.startswith(("http://", "https://")) else f"http://{target}"
 
+    base_cmd.append(normalized_target)
+
+
+    shell_command = f"echo {shlex.quote(target)} | {' '.join(base_cmd)}"
+    logger.info(f"Built HTTPX command: {shell_command}")
+
+    return ["sh", "-c", shell_command]

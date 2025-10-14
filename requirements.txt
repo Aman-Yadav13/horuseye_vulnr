@@ -3,3 +3,4 @@ Flask
 pydantic
 python-dotenv
 semgrep
+google-cloud-storage
