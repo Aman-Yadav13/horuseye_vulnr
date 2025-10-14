@@ -37,7 +37,6 @@ env/
 
 .env
 *.env
-s
 
 # Flask instance folder
 instance/
