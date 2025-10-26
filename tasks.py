@@ -39,7 +39,6 @@ def run_vulnerability_scan(scan_request_data: dict):
                 logger.exception(error_msg)
                 results.append(ToolOutput(tool_name=tool_req.name, command=[], return_code=-1, stdout="", stderr=error_msg, output_file_paths=[], success=False))
 
-        # Determine overall status and create the final response object
         all_success = all(res.success for res in results)
         status = "success" if all_success else "partial_failure" if any(res.success for res in results) else "failed"
         message = "Scan completed by worker."

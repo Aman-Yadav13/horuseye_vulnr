@@ -31,7 +31,7 @@ def default_post_processor(scan_id: str, tool_name: str, output_dir: str, output
         if os.path.exists(file_path):
             filename = os.path.basename(file_path)
             # Upload all files to the 'review' folder by default
-            gcs_path = f"data/{scan_id}/{tool_name}/review/{filename}"
+            gcs_path = f"data/{scan_id}/vulnr/{tool_name}/review/{filename}"
             if not upload_file_to_gcs(file_path, gcs_path):
                 all_uploads_succeeded = False
     
@@ -75,13 +75,13 @@ def post_process_nuclei(scan_id: str, tool_name: str, output_dir: str, output_fi
 
     uploads = {
         "llm": upload_file_to_gcs(
-            compiled_llm_file, f"data/{scan_id}/{tool_name}/llm/compiled_llm_input.txt"
+            compiled_llm_file, f"data/{scan_id}/vulnr/{tool_name}/llm/compiled_llm_input.txt"
         ),
         "stdout_review": upload_file_to_gcs(
-            stdout_file, f"data/{scan_id}/{tool_name}/review/output.stdout"
+            stdout_file, f"data/{scan_id}/vulnr/{tool_name}/review/output.stdout"
         ),
         "stderr_review": upload_file_to_gcs(
-            stderr_file, f"data/{scan_id}/{tool_name}/review/output.stderr"
+            stderr_file, f"data/{scan_id}/vulnr/{tool_name}/review/output.stderr"
         )
     }
 
@@ -110,7 +110,7 @@ def post_process_nikto(scan_id: str, tool_name: str, output_dir: str, output_fil
 
     if os.path.exists(stdout_file):
         llm_upload_success = upload_file_to_gcs(
-            stdout_file, f"data/{scan_id}/{tool_name}/llm/nikto_llm_input.txt"
+            stdout_file, f"data/{scan_id}/vulnr/{tool_name}/llm/nikto_llm_input.txt"
         )
         uploads_succeeded.append(llm_upload_success)
     else:
@@ -120,13 +120,13 @@ def post_process_nikto(scan_id: str, tool_name: str, output_dir: str, output_fil
 
     if os.path.exists(stdout_file):
         review_stdout_success = upload_file_to_gcs(
-            stdout_file, f"data/{scan_id}/{tool_name}/review/output.stdout"
+            stdout_file, f"data/{scan_id}/vulnr/{tool_name}/review/output.stdout"
         )
         uploads_succeeded.append(review_stdout_success)
     
     if os.path.exists(json_file):
         review_json_success = upload_file_to_gcs(
-            json_file, f"data/{scan_id}/{tool_name}/review/nikto_results.json"
+            json_file, f"data/{scan_id}/vulnr/{tool_name}/review/nikto_results.json"
         )
         uploads_succeeded.append(review_json_success)
     else:
@@ -162,7 +162,7 @@ def post_process_sqlmap(scan_id: str, tool_name: str, output_dir: str, output_fi
     if not sqlmap_result_dir:
         logger.error(f"Could not find sqlmap output subdirectory in {output_dir}")
         if os.path.exists(stdout_file):
-            upload_file_to_gcs(stdout_file, f"data/{scan_id}/{tool_name}/review/output.stdout_FAILURE")
+            upload_file_to_gcs(stdout_file, f"data/{scan_id}/vulnr/{tool_name}/review/output.stdout_FAILURE")
         delete_local_directory(output_dir) # Cleanup to avoid orphaned files
         return
 
@@ -170,7 +170,7 @@ def post_process_sqlmap(scan_id: str, tool_name: str, output_dir: str, output_fi
 
     if os.path.exists(log_file):
         llm_success = upload_file_to_gcs(
-            log_file, f"data/{scan_id}/{tool_name}/llm/sqlmap_log.txt"
+            log_file, f"data/{scan_id}/vulnr/{tool_name}/llm/sqlmap_log.txt"
         )
         uploads_succeeded.append(llm_success)
     else:
@@ -179,13 +179,13 @@ def post_process_sqlmap(scan_id: str, tool_name: str, output_dir: str, output_fi
 
     if os.path.exists(stdout_file):
         review_stdout_success = upload_file_to_gcs(
-            stdout_file, f"data/{scan_id}/{tool_name}/review/output.stdout"
+            stdout_file, f"data/{scan_id}/vulnr/{tool_name}/review/output.stdout"
         )
         uploads_succeeded.append(review_stdout_success)
         
     if os.path.exists(log_file):
         review_log_success = upload_file_to_gcs(
-            log_file, f"data/{scan_id}/{tool_name}/review/log.txt"
+            log_file, f"data/{scan_id}/vulnr/{tool_name}/review/log.txt"
         )
         uploads_succeeded.append(review_log_success)
 
@@ -211,7 +211,7 @@ def post_process_trivy(scan_id: str, tool_name: str, output_dir: str, output_fil
 
     if os.path.exists(json_file):
         upload_succeeded = upload_file_to_gcs(
-            json_file, f"data/{scan_id}/{tool_name}/review/trivy_results.json"
+            json_file, f"data/{scan_id}/vulnr/{tool_name}/review/trivy_results.json"
         )
     else:
         logger.error(f"Trivy JSON output not found at {json_file}")
@@ -238,7 +238,7 @@ def post_process_lynis(scan_id: str, tool_name: str, output_dir: str, output_fil
 
     if os.path.exists(stdout_file):
         upload_succeeded = upload_file_to_gcs(
-            stdout_file, f"data/{scan_id}/{tool_name}/review/lynis_audit_output.txt"
+            stdout_file, f"data/{scan_id}/vulnr/{tool_name}/review/lynis_audit_output.txt"
         )
     else:
         logger.error(f"Lynis stdout output not found at {stdout_file}")
@@ -264,12 +264,12 @@ def post_process_wpscan(scan_id: str, tool_name: str, output_dir: str, output_fi
 
     if os.path.exists(json_file):
         llm_success = upload_file_to_gcs(
-            json_file, f"data/{scan_id}/{tool_name}/llm/wpscan_results.json"
+            json_file, f"data/{scan_id}/vulnr/{tool_name}/llm/wpscan_results.json"
         )
         uploads_succeeded.append(llm_success)
         
         review_success = upload_file_to_gcs(
-            json_file, f"data/{scan_id}/{tool_name}/review/wpscan_results.json"
+            json_file, f"data/{scan_id}/vulnr/{tool_name}/review/wpscan_results.json"
         )
         uploads_succeeded.append(review_success)
     else:
@@ -296,12 +296,12 @@ def post_process_semgrep(scan_id: str, tool_name: str, output_dir: str, output_f
 
     if os.path.exists(stderr_file):
         llm_success = upload_file_to_gcs(
-            stderr_file, f"data/{scan_id}/{tool_name}/llm/semgrep_scan_output.txt"
+            stderr_file, f"data/{scan_id}/vulnr/{tool_name}/llm/semgrep_scan_output.txt"
         )
         uploads_succeeded.append(llm_success)
         
         review_success = upload_file_to_gcs(
-            stderr_file, f"data/{scan_id}/{tool_name}/review/output.stderr"
+            stderr_file, f"data/{scan_id}/vulnr/{tool_name}/review/output.stderr"
         )
         uploads_succeeded.append(review_success)
     else:
@@ -330,12 +330,12 @@ def post_process_trufflehog(scan_id: str, tool_name: str, output_dir: str, outpu
     if os.path.exists(stdout_file):
         # Upload for LLM
         llm_success = upload_file_to_gcs(
-            stdout_file, f"data/{scan_id}/{tool_name}/llm/trufflehog_scan_output.txt"
+            stdout_file, f"data/{scan_id}/vulnr/{tool_name}/llm/trufflehog_scan_output.txt"
         )
         uploads_succeeded.append(llm_success)
         
         review_success = upload_file_to_gcs(
-            stdout_file, f"data/{scan_id}/{tool_name}/review/output.stdout"
+            stdout_file, f"data/{scan_id}/vulnr/{tool_name}/review/output.stdout"
         )
         uploads_succeeded.append(review_success)
     else:
@@ -362,12 +362,12 @@ def post_process_gitleaks(scan_id: str, tool_name: str, output_dir: str, output_
 
     if os.path.exists(json_file):
         llm_success = upload_file_to_gcs(
-            json_file, f"data/{scan_id}/{tool_name}/llm/gitleaks_results.json"
+            json_file, f"data/{scan_id}/vulnr/{tool_name}/llm/gitleaks_results.json"
         )
         uploads_succeeded.append(llm_success)
         
         review_success = upload_file_to_gcs(
-            json_file, f"data/{scan_id}/{tool_name}/review/gitleaks_results.json"
+            json_file, f"data/{scan_id}/vulnr/{tool_name}/review/gitleaks_results.json"
         )
         uploads_succeeded.append(review_success)
     else:
@@ -399,12 +399,12 @@ def post_process_yara(scan_id: str, tool_name: str, output_dir: str, output_file
     if os.path.exists(stderr_file):
         # Upload for LLM with a more descriptive name
         llm_success = upload_file_to_gcs(
-            stderr_file, f"data/{scan_id}/{tool_name}/llm/yara_scan_output.txt"
+            stderr_file, f"data/{scan_id}/vulnr/{tool_name}/llm/yara_scan_output.txt"
         )
         uploads_succeeded.append(llm_success)
         
         review_success = upload_file_to_gcs(
-            stderr_file, f"data/{scan_id}/{tool_name}/review/output.stderr"
+            stderr_file, f"data/{scan_id}/vulnr/{tool_name}/review/output.stderr"
         )
         uploads_succeeded.append(review_success)
     else:
@@ -444,14 +444,14 @@ def post_process_httpx(scan_id: str, tool_name: str, output_dir: str, output_fil
                 f_out.writelines(summary_lines)
             
             llm_success = upload_file_to_gcs(
-                summary_file_path, f"data/{scan_id}/{tool_name}/llm/httpx_summary.txt"
+                summary_file_path, f"data/{scan_id}/vulnr/{tool_name}/llm/httpx_summary.txt"
             )
             uploads_succeeded.append(llm_success)
 
         except StopIteration: # Handles files with less than 20 lines
             logger.info("File has less than 20 lines, using full content for summary.")
             llm_success = upload_file_to_gcs(
-                stdout_file, f"data/{scan_id}/{tool_name}/llm/httpx_summary.txt"
+                stdout_file, f"data/{scan_id}/vulnr/{tool_name}/llm/httpx_summary.txt"
             )
             uploads_succeeded.append(llm_success)
         except Exception as e:
@@ -459,7 +459,7 @@ def post_process_httpx(scan_id: str, tool_name: str, output_dir: str, output_fil
             uploads_succeeded.append(False)
         
         review_success = upload_file_to_gcs(
-            stdout_file, f"data/{scan_id}/{tool_name}/review/output.stdout"
+            stdout_file, f"data/{scan_id}/vulnr/{tool_name}/review/output.stdout"
         )
         uploads_succeeded.append(review_success)
 

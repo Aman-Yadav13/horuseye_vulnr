@@ -4,7 +4,6 @@ import shlex
 from typing import List, Callable, Dict, Tuple, Optional
 from app.models import ToolOutput, ToolParameter
 import os
-import shutil
 from app.post_processing import default_post_processor, get_post_processor
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -83,16 +82,13 @@ class ToolRunner:
                 if os.path.isfile(full_path) and full_path not in output_files:
                     output_files.append(full_path)
             
-            # More reliable success check: The tool's exit code is the most reliable indicator.
             success = result.returncode == 0
             
             if success:
                 logger.info(f"Command for tool '{tool_name}' succeeded. Starting post-processing.")
                 post_processor = get_post_processor(tool_name)
-                # We pass all the context the post-processor needs
                 post_processor(scan_id, tool_name, output_dir, output_files)
             else:
-                # Decide if you want to upload failed logs too. Defaulting to yes.
                 logger.warning(f"Command for tool '{tool_name}' failed. Uploading raw logs for review.")
                 default_post_processor(scan_id, tool_name, output_dir, output_files)
 
