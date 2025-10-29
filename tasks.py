@@ -8,11 +8,10 @@ from app.tool_runner import ToolRunner
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-@celery.task(name='tasks.run_vulnerability_scan')
-def run_vulnerability_scan(scan_request_data: dict):
+def execute_scan_logic(scan_request_data: dict):
     """
-    This is the main Celery task that runs in the background worker.
-    It takes the scan request data, executes the tools, and saves the result.
+    This is the core scan logic, separated from the Celery task.
+    It can be called directly by any script.
     """
     try:
         scan_request = ScanRequest(**scan_request_data)
@@ -51,7 +50,6 @@ def run_vulnerability_scan(scan_request_data: dict):
             status=status
         )
 
-        # Save the final result to a JSON file
         project_root = "/app"
         output_dir = os.path.join(project_root, "outputs", scan_request.scan_id)
         os.makedirs(output_dir, exist_ok=True)
@@ -65,5 +63,16 @@ def run_vulnerability_scan(scan_request_data: dict):
 
     except Exception as e:
         logger.exception(f"A critical error occurred in the worker task for scan data: {scan_request_data}")
-        # Optionally, save an error state file here
+        raise e
+
+@celery.task(name='tasks.run_vulnerability_scan')
+def run_vulnerability_scan(scan_request_data: dict):
+    """
+    This is the Celery task wrapper.
+    It calls the main logic function.
+    """
+    try:
+        return execute_scan_logic(scan_request_data)
+    except Exception as e:
+        logger.exception(f"A critical error occurred in the worker task for scan data: {scan_request_data}")
         return {"status": "error", "details": str(e)}

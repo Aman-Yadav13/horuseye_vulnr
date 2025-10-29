@@ -56,4 +56,4 @@ COPY . .
 
 EXPOSE 8081
 
-CMD ["python", "main.py"]
+CMD ["python3", "argo_run_scan.py"]
