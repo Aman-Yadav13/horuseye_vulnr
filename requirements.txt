@@ -4,3 +4,4 @@ pydantic
 python-dotenv
 semgrep
 google-cloud-storage
+google-cloud-pubsub
