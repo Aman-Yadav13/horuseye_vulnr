@@ -5,3 +5,5 @@ python-dotenv
 semgrep
 google-cloud-storage
 google-cloud-pubsub
+google-api-python-client
+requests
